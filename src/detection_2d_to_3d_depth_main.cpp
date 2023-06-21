@@ -1,5 +1,7 @@
 // Copyright 2023 Intelligent Robotics Lab
 //
+// Modified by: StressOverflow team. (Diego García Currás) at 21/06/2023.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,14 +16,15 @@
 
 #include <memory>
 
-#include "perception_asr/DetectionTo3DfromDepthNode.hpp"
+#include "perception_2d_to_3d/DetectionTo3DfromDepthNode.hpp"
+
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto node_converter = std::make_shared<perception_asr::DetectionTo3DfromDepthNode>();
+  auto node_converter = std::make_shared<perception_2d_to_3d::DetectionTo3DfromDepthNode>();
 
   rclcpp::spin(node_converter);
 

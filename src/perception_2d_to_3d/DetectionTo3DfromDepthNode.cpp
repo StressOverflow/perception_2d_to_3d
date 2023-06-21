@@ -1,5 +1,7 @@
 // Copyright 2023 Intelligent Robotics Lab
 //
+// Modified by: StressOverflow team. (Diego García Currás) at 21/06/2023.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,7 +16,7 @@
 
 #include <memory>
 
-#include "perception_asr/DetectionTo3DfromDepthNode.hpp"
+#include "perception_2d_to_3d/DetectionTo3DfromDepthNode.hpp"
 
 #include "sensor_msgs/msg/image.hpp"
 #include "vision_msgs/msg/detection2_d_array.hpp"
@@ -28,7 +30,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace perception_asr
+namespace perception_2d_to_3d
 {
 
 using std::placeholders::_1;
@@ -88,9 +90,18 @@ DetectionTo3DfromDepthNode::callback_sync(
       vision_msgs::msg::Detection3D detection_3d_msg;
       detection_3d_msg.results = detection.results;
 
-      float depth = depth_image_proc::DepthTraits<uint16_t>::toMeters(
-        cv_depth_ptr->image.at<uint16_t>(
-          cv::Point2d(detection.bbox.center.position.x, detection.bbox.center.position.y)));
+      float depth;
+
+      if (image_msg->encoding == "16UC1") {
+        depth = depth_image_proc::DepthTraits<uint16_t>::toMeters(
+          cv_depth_ptr->image.at<uint16_t>(
+            cv::Point2d(detection.bbox.center.position.x, detection.bbox.center.position.y)));
+      } else if (image_msg->encoding == "32FC1") {
+        depth = cv_depth_ptr->image.at<float>(
+          cv::Point2d(detection.bbox.center.position.x, detection.bbox.center.position.y));
+      } else {
+        RCLCPP_ERROR(get_logger(), "Format not recognized");
+      }
 
       if (std::isnan(depth)) {
         continue;
@@ -108,6 +119,11 @@ DetectionTo3DfromDepthNode::callback_sync(
       detection_3d_msg.bbox.center.position.y = point.y;
       detection_3d_msg.bbox.center.position.z = point.z;
 
+      detection_3d_msg.bbox.size.x = detection.bbox.size_x;
+      detection_3d_msg.bbox.size.y = detection.bbox.size_y;
+
+      detection_3d_msg.id = detection.id;
+
       detections_3d_msg.detections.push_back(detection_3d_msg);
     }
 
@@ -117,4 +133,4 @@ DetectionTo3DfromDepthNode::callback_sync(
   }
 }
 
-}  // namespace perception_asr
+}  // namespace perception_2d_to_3d
